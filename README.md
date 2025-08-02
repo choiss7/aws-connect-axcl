@@ -125,12 +125,12 @@ Contact Flow에서 사용할 수 있는 Lambda 응답 속성들:
 **즉시 해결 방법**: Lambda 파라미터에서 직접 설정
 ```
 키: StoredInput
-값: $.StoredInput
+값: $.StoredCustomerInput
 
 또는
 
 키: userInput  
-값: $.StoredInput
+값: $.StoredCustomerInput
 ```
 
 이렇게 하면 SetAttributes 없이도 직접 사용자 입력을 Lambda로 전달할 수 있습니다.
