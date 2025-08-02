@@ -118,6 +118,23 @@ Contact Flow에서 사용할 수 있는 Lambda 응답 속성들:
 - **StoreUserInput 결과는 $.StoredInput으로 접근**
 - **Lambda에서는 $.Attributes.customerInput으로 전달받음**
 
+### 🚨 SetAttributes가 작동하지 않는 경우
+
+만약 SetAttributes에서 `customerInput = ""` (빈값)이 설정되는 경우:
+
+**즉시 해결 방법**: Lambda 파라미터에서 직접 설정
+```
+키: StoredInput
+값: $.StoredInput
+
+또는
+
+키: userInput  
+값: $.StoredInput
+```
+
+이렇게 하면 SetAttributes 없이도 직접 사용자 입력을 Lambda로 전달할 수 있습니다.
+
 ## Contact Flow 연동 예시
 
 Lambda 함수 호출 후 응답 속성을 사용하는 방법:

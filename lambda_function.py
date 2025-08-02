@@ -57,13 +57,15 @@ def lambda_handler(event, context):
 
         # 고객 입력값 추출 (이벤트 형식에 따른 처리)
         possible_inputs = [
+            # Lambda Parameters에서 직접 $.StoredInput (최우선순위)
+            lambda_parameters.get('StoredInput'),  # Contact Flow에서 직접 $.StoredInput 전달
+            lambda_parameters.get('userInput'),    # Contact Flow에서 $.StoredInput을 userInput으로 전달
             # 직접 파라미터에서 (Simple Format)
             lambda_parameters.get('customerInput'),
             lambda_parameters.get('customer_input'), 
-            lambda_parameters.get('userInput'),
             lambda_parameters.get('employeeId'),
             lambda_parameters.get('사번'),
-            # Contact attributes (SetAttributes에서 설정된 값들) - 우선순위 높임
+            # Contact attributes (SetAttributes에서 설정된 값들)
             attributes.get('customerInput'),
             attributes.get('customer_input'),
             attributes.get('StoredInput'),
@@ -74,7 +76,7 @@ def lambda_handler(event, context):
             contact_data.get('SystemAttributes', {}).get('StoredInput'),
             contact_data.get('Attributes', {}).get('StoredInput'),
             contact_data.get('Attributes', {}).get('customerInput'),
-            # Lambda Parameters에서 추가 경로들
+            # Lambda Parameters에서 문자열 변환
             str(lambda_parameters.get('StoredInput', '')),
             str(lambda_parameters.get('userInput', '')),
             # AWS Connect 시스템 변수들 (Standard Format)
@@ -105,6 +107,10 @@ def lambda_handler(event, context):
             print(f"2. StoreUserInput 블록 이후에 SetAttributes 블록으로 값 저장")
             print(f"3. SetAttributes에서 키: 'customerInput', 값: '$.StoredInput' 설정")
             print(f"4. Lambda 호출 전에 SetAttributes 블록이 실행되는지 확인")
+            print(f"")
+            print(f"⚠️  현재 문제: SetAttributes에서 customerInput = '' (빈값)")
+            print(f"💡 해결책: Lambda 파라미터에서 직접 $.StoredInput 사용하거나")
+            print(f"          StoreUserInput → SetAttributes 연결 확인")
 
         # 고객 전화번호 추출
         customer_phone = (
