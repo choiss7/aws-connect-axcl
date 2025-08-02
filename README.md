@@ -1,1 +1,78 @@
-# aws-connect-axcl
+# AWS Connect AXCL 이벤트 등록 시스템
+
+AWS Connect와 Lambda를 연동한 전화 기반 이벤트 등록 시스템입니다.
+
+## 시스템 개요
+
+이 시스템은 AWS Connect Contact Flow를 통해 고객으로부터 사번을 입력받아 이벤트에 등록하고, S3에 데이터를 저장하는 시스템입니다.
+
+## 아키텍처
+
+```
+고객 전화 → AWS Connect → Contact Flow → Lambda Function → S3 Storage
+```
+
+## 주요 구성 요소
+
+### 1. AWS Connect Contact Flow
+- 고객으로부터 사번 입력 수집
+- 입력값 검증 및 Lambda 함수 호출
+- 응답 메시지 전달
+
+### 2. Lambda Function (`lambda_function.py`)
+- Contact Flow에서 전달받은 데이터 처리
+- 고객 정보 추출 및 검증
+- S3에 이벤트 데이터 저장
+- 추첨 번호 생성 및 응답
+
+### 3. S3 Storage
+- 버킷명: `axcl`
+- 파일명: `axcl_event.txt`
+- 이벤트 등록 데이터를 JSON 형태로 저장
+
+## 데이터 구조
+
+저장되는 데이터 형식:
+```json
+{
+    "contactId": "contact-uuid",
+    "timestamp": "2024-01-01T00:00:00.000000",
+    "customerPhone": "+82-10-1234-5678",
+    "customerInput": "사번",
+    "eventType": "lottery_registration"
+}
+```
+
+## Lambda 함수 주요 기능
+
+1. **데이터 추출**: Contact Flow에서 전달된 고객 정보 추출
+2. **입력 검증**: 사번 입력값 유효성 검사
+3. **S3 저장**: 이벤트 데이터를 S3에 추가 저장
+4. **추첨 번호 생성**: 사번 기반 해시를 이용한 고유 추첨 번호 생성
+5. **에러 처리**: 시스템 오류 및 S3 저장 실패에 대한 적절한 처리
+
+## 설정 요구사항
+
+### AWS Lambda
+- Runtime: Python 3.9+
+- IAM Role: S3 읽기/쓰기 권한 필요
+- Environment Variables: 필요시 BUCKET_NAME 설정
+
+### AWS Connect
+- Contact Flow에서 Lambda 함수 연동 설정
+- 고객 입력을 Lambda로 전달하는 Invoke AWS Lambda 블록 구성
+
+### S3 Bucket
+- 버킷명: `axcl`
+- 적절한 접근 권한 설정
+
+## 사용법
+
+1. AWS Connect에서 Contact Flow 설정
+2. Lambda 함수 배포 및 Connect와 연동
+3. S3 버킷 생성 및 권한 설정
+4. 시스템 테스트
+
+## 추첨 번호 생성 로직
+
+사번을 MD5 해시로 변환한 후, 앞 4자리를 16진수에서 10진수로 변환하여 10000으로 나눈 나머지를 사용합니다. 형식: `L0001` - `L9999`
