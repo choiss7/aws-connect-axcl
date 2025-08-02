@@ -8,7 +8,8 @@ BUCKET_NAME = "axcl"
 FILE_NAME = "axcl_event.txt"
 
 def lambda_handler(event, context):
-    print("Incoming Event:", json.dumps(event, ensure_ascii=False))
+    print("=== Lambda Function Started ===")
+    print("Incoming Event:", json.dumps(event, ensure_ascii=False, indent=2))
     
     # Contact Flow 응답을 위한 기본 구조
     def create_response(status_code, message, success, registration_status, **kwargs):
@@ -23,12 +24,16 @@ def lambda_handler(event, context):
         }
         # 추가 속성들 병합
         response.update(kwargs)
+        print("Lambda Response:", json.dumps(response, ensure_ascii=False, indent=2))
         return response
 
     try:
         # Contact Flow에서 전달된 데이터 추출
         contact_data = event.get('Details', {}).get('ContactData', {})
         attributes = contact_data.get('Attributes', {})
+        
+        print("Contact Data:", json.dumps(contact_data, ensure_ascii=False, indent=2))
+        print("Attributes:", json.dumps(attributes, ensure_ascii=False, indent=2))
         
         # Contact ID 추출 (Contact Flow의 SetAttributes에서 설정한 값 우선)
         contact_id = (
@@ -37,25 +42,68 @@ def lambda_handler(event, context):
             event.get('ContactId', 'unknown_contact')
         )
 
-        # 고객 입력값 추출 (Contact Flow Attributes에서)
-        customer_input = (
-            attributes.get('customerInput') or
-            event.get('Details', {}).get('Parameters', {}).get('customer_input') or
-            event.get('customerInput')
-        )
+        # 고객 입력값 추출 (AWS Connect의 다양한 경로에서 시도)
+        # AWS Connect에서 Lambda로 전달하는 일반적인 구조들을 모두 확인
+        possible_inputs = [
+            # Contact attributes (SetAttributes에서 설정된 값들)
+            attributes.get('customerInput'),
+            # Lambda 호출 시 Parameters로 전달된 값들
+            event.get('Details', {}).get('Parameters', {}).get('customer_input'),
+            event.get('Details', {}).get('Parameters', {}).get('customerInput'),
+            # 이벤트 루트에서 직접
+            event.get('customerInput'),
+            # Contact data의 다양한 위치
+            contact_data.get('StoredInput'),
+            contact_data.get('SystemAttributes', {}).get('StoredInput'),
+            # AWS Connect에서 자주 사용하는 시스템 속성명들
+            contact_data.get('Attributes', {}).get('StoredInput'),
+            contact_data.get('Attributes', {}).get('customer_input'),
+            # Parameters의 다양한 형태
+            str(event.get('Details', {}).get('Parameters', {}).get('StoredInput', '')),
+            str(attributes.get('StoredInput', '')),
+            # 사용자 정의 속성 (Contact Flow에서 설정 가능한 이름들)
+            attributes.get('사번'),
+            attributes.get('empId'),
+            attributes.get('employeeId'),
+            # Contact Flow에서 $.StoredInput으로 설정했을 수 있는 값
+            str(event.get('Details', {}).get('Parameters', {}).get('$.StoredInput', '')),
+        ]
+        
+        # None이 아니고 빈 문자열이 아닌 첫 번째 값 선택
+        customer_input = None
+        for i, inp in enumerate(possible_inputs):
+            if inp and str(inp).strip():
+                customer_input = str(inp).strip()
+                print(f"✓ Found customer input from source {i}: '{inp}'")
+                break
 
         # 고객 전화번호 추출
         customer_phone = (
             attributes.get('customerPhone') or
             contact_data.get('CustomerEndpoint', {}).get('Address') or
-            event.get('customerPhone')
+            event.get('customerPhone') or
+            # 추가 가능한 경로들
+            contact_data.get('CustomerNumber')
         )
 
-        print(f"Extracted data - Contact ID: {contact_id}, Customer Input: {customer_input}, Phone: {customer_phone}")
+        print(f"=== Extracted Data ===")
+        print(f"Contact ID: {contact_id}")
+        print(f"Customer Input: '{customer_input}' (type: {type(customer_input)})")
+        print(f"Customer Phone: {customer_phone}")
+        
+        # Contact Flow Parameters 전체 출력
+        parameters = event.get('Details', {}).get('Parameters', {})
+        print(f"All Parameters: {json.dumps(parameters, ensure_ascii=False, indent=2)}")
+        
+        # 모든 가능한 입력 소스 디버깅
+        print(f"=== Debug All Input Sources ===")
+        for i, inp in enumerate(possible_inputs):
+            print(f"Source {i}: {inp} (type: {type(inp)})")
 
         # 고객 입력값 검증
         if not customer_input:
             print("Error: No customer input provided")
+            print("Checked all possible input sources but found none")
             return create_response(
                 status_code=400,
                 message='사번을 입력해주세요.',
@@ -65,9 +113,16 @@ def lambda_handler(event, context):
             )
         
         # 사번 형식 검증 (숫자만 허용, 4-8자리)
-        customer_input = customer_input.strip()
+        customer_input = str(customer_input).strip() if customer_input else ""
+        print(f"=== Input Validation ===")
+        print(f"Cleaned Input: '{customer_input}' (length: {len(customer_input)})")
+        print(f"Is digit: {customer_input.isdigit()}")
+        
         if not customer_input.isdigit() or len(customer_input) < 4 or len(customer_input) > 8:
-            print(f"Error: Invalid employee ID format: {customer_input}")
+            print(f"Error: Invalid employee ID format")
+            print(f"- Input: '{customer_input}'")
+            print(f"- Length: {len(customer_input)}")
+            print(f"- Is digit: {customer_input.isdigit()}")
             return create_response(
                 status_code=400,
                 message='올바른 사번을 입력해주세요. (4-8자리 숫자)',
@@ -75,6 +130,8 @@ def lambda_handler(event, context):
                 registration_status='INVALID_FORMAT',
                 errorMessage='올바른 사번을 입력해주세요. (4-8자리 숫자)'
             )
+            
+        print(f"✓ Input validation passed: '{customer_input}'")
 
         # 저장할 JSON 데이터
         record = {
@@ -134,6 +191,10 @@ def lambda_handler(event, context):
         # 성공 응답 - Contact Flow에서 사용할 속성들 추가
         lottery_number = generate_lottery_number(customer_input)
         success_message = f"이벤트가 성공적으로 등록되었습니다. 사번: {customer_input}, 추첨번호: {lottery_number}"
+        
+        print(f"=== Success Response ===")
+        print(f"Generated lottery number: {lottery_number}")
+        print(f"Success message: {success_message}")
         
         return create_response(
             status_code=200,
