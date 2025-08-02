@@ -46,10 +46,12 @@ AWS Connect와 Lambda를 연동한 전화 기반 이벤트 등록 시스템입�
 ## Lambda 함수 주요 기능
 
 1. **데이터 추출**: Contact Flow에서 전달된 고객 정보 추출
-2. **입력 검증**: 사번 입력값 유효성 검사
-3. **S3 저장**: 이벤트 데이터를 S3에 추가 저장
-4. **추첨 번호 생성**: 사번 기반 해시를 이용한 고유 추첨 번호 생성
-5. **에러 처리**: 시스템 오류 및 S3 저장 실패에 대한 적절한 처리
+2. **입력 검증**: 사번 입력값 유효성 검사 (4-8자리 숫자)
+3. **중복 확인**: 이미 등록된 사번 중복 등록 방지
+4. **S3 저장**: 이벤트 데이터를 S3에 추가 저장
+5. **추첨 번호 생성**: 사번 기반 해시를 이용한 고유 추첨 번호 생성
+6. **표준화된 응답**: Contact Flow에서 사용하기 쉬운 표준화된 응답 형식
+7. **에러 처리**: 시스템 오류 및 S3 저장 실패에 대한 적절한 처리
 
 ## 설정 요구사항
 
@@ -73,6 +75,32 @@ AWS Connect와 Lambda를 연동한 전화 기반 이벤트 등록 시스템입�
 3. S3 버킷 생성 및 권한 설정
 4. 시스템 테스트
 
+## Lambda 응답 속성
+
+Contact Flow에서 사용할 수 있는 Lambda 응답 속성들:
+
+### 성공 시
+- `registrationStatus`: "SUCCESS"
+- `contactId`: Contact ID
+- `customerPhone`: 고객 전화번호
+- `customerInput`: 입력된 사번
+- `lotteryNumber`: 생성된 추첨번호 (L0001-L9999)
+- `successMessage`: 성공 메시지
+
+### 에러 시
+- `registrationStatus`: "INPUT_ERROR" | "INVALID_FORMAT" | "DUPLICATE" | "ERROR"
+- `errorMessage`: 에러 메시지
+- `success`: false
+
 ## 추첨 번호 생성 로직
 
 사번을 MD5 해시로 변환한 후, 앞 4자리를 16진수에서 10진수로 변환하여 10000으로 나눈 나머지를 사용합니다. 형식: `L0001` - `L9999`
+
+## Contact Flow 연동 예시
+
+Lambda 함수 호출 후 응답 속성을 사용하는 방법:
+
+1. **성공 분기**: `$.External.registrationStatus` == "SUCCESS"
+2. **에러 분기**: `$.External.registrationStatus` != "SUCCESS"
+3. **메시지 출력**: `$.External.successMessage` 또는 `$.External.errorMessage`
+4. **추첨번호 안내**: `$.External.lotteryNumber`
