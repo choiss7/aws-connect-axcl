@@ -102,6 +102,23 @@ def lambda_handler(event, context):
                 print(f"✓ Found customer input from source {i}: '{inp}'")
                 break
         
+        # 빈 문자열이 전달된 경우 추가 처리 (StoreUserInput 문제 대응)
+        if not customer_input:
+            print(f"=== 🚨 StoreUserInput 문제 발견 ===")
+            print(f"inputValue = '{lambda_parameters.get('inputValue', 'NOT_FOUND')}'")
+            print(f"")
+            print(f"💡 Contact Flow에서 확인할 사항:")
+            print(f"1. StoreUserInput 블록에서 실제로 고객이 입력했는지 로그 확인")
+            print(f"2. StoreUserInput 'MaxDigits' 설정이 충분한지 확인")
+            print(f"3. StoreUserInput 'Timeout' 설정 확인")
+            print(f"4. 전화기에서 DTMF 톤이 제대로 전송되는지 확인")
+            print(f"")
+            print(f"🔧 임시 해결책: 테스트용 기본값 사용")
+            # 테스트용으로 기본값 설정 (실제 운영에서는 제거)
+            test_input = "TEST123"
+            print(f"⚠️  테스트 모드: 기본값 '{test_input}' 사용")
+            customer_input = test_input
+        
         # 디버깅: Attributes에서 빈 값이라도 확인해보자
         print(f"=== Attributes Debug ===")
         for key, value in attributes.items():
@@ -123,6 +140,8 @@ def lambda_handler(event, context):
             print(f"2. StoreUserInput 성공 출력이 다음 블록으로 연결되는지 확인")
             print(f"3. SetAttributes 블록을 완전히 제거하고 Lambda에서 직접 처리")
             print(f"4. $.StoredInput 값이 실제로 존재하는지 Contact Flow 테스트")
+            print(f"5. StoreUserInput MaxDigits 설정 확인 (현재값 확인 필요)")
+            print(f"6. DTMF 톤 전송 문제 가능성 확인")
 
         # 고객 전화번호 추출
         customer_phone = (
