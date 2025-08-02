@@ -42,31 +42,31 @@ def lambda_handler(event, context):
             event.get('ContactId', 'unknown_contact')
         )
 
-        # 고객 입력값 추출 (AWS Connect의 다양한 경로에서 시도)
-        # AWS Connect에서 Lambda로 전달하는 일반적인 구조들을 모두 확인
+        # 고객 입력값 추출 (AWS Connect Lambda Parameters에서)
+        # Contact Flow의 "텍스트 블록을 통한 값의 전달" 설정에 따른 파라미터들
+        lambda_parameters = event.get('Details', {}).get('Parameters', {})
+        
         possible_inputs = [
+            # Lambda Parameters에서 직접 전달된 값들 (가장 우선순위)
+            lambda_parameters.get('customerInput'),
+            lambda_parameters.get('customer_input'), 
+            lambda_parameters.get('userInput'),
+            lambda_parameters.get('employeeId'),
+            lambda_parameters.get('사번'),
             # Contact attributes (SetAttributes에서 설정된 값들)
             attributes.get('customerInput'),
-            # Lambda 호출 시 Parameters로 전달된 값들
-            event.get('Details', {}).get('Parameters', {}).get('customer_input'),
-            event.get('Details', {}).get('Parameters', {}).get('customerInput'),
-            # 이벤트 루트에서 직접
-            event.get('customerInput'),
-            # Contact data의 다양한 위치
+            attributes.get('customer_input'),
+            # 시스템 속성들
             contact_data.get('StoredInput'),
             contact_data.get('SystemAttributes', {}).get('StoredInput'),
-            # AWS Connect에서 자주 사용하는 시스템 속성명들
             contact_data.get('Attributes', {}).get('StoredInput'),
-            contact_data.get('Attributes', {}).get('customer_input'),
-            # Parameters의 다양한 형태
-            str(event.get('Details', {}).get('Parameters', {}).get('StoredInput', '')),
+            # 추가 가능한 경로들
+            str(lambda_parameters.get('StoredInput', '')),
             str(attributes.get('StoredInput', '')),
-            # 사용자 정의 속성 (Contact Flow에서 설정 가능한 이름들)
-            attributes.get('사번'),
-            attributes.get('empId'),
-            attributes.get('employeeId'),
-            # Contact Flow에서 $.StoredInput으로 설정했을 수 있는 값
-            str(event.get('Details', {}).get('Parameters', {}).get('$.StoredInput', '')),
+            # AWS Connect 시스템 변수들
+            lambda_parameters.get('$.StoredInput'),
+            lambda_parameters.get('$.External.customerInput'),
+            lambda_parameters.get('$.Attributes.customerInput'),
         ]
         
         # None이 아니고 빈 문자열이 아닌 첫 번째 값 선택
@@ -79,11 +79,20 @@ def lambda_handler(event, context):
 
         # 고객 전화번호 추출
         customer_phone = (
+            # Lambda Parameters에서 직접 전달된 값들
+            lambda_parameters.get('customerPhone') or
+            lambda_parameters.get('customer_phone') or
+            # Contact attributes
             attributes.get('customerPhone') or
+            attributes.get('customer_phone') or
+            # Contact data의 표준 위치
             contact_data.get('CustomerEndpoint', {}).get('Address') or
+            contact_data.get('CustomerNumber') or
+            # 시스템 속성들
+            contact_data.get('SystemAttributes', {}).get('customerPhone') or
+            # 추가 경로들
             event.get('customerPhone') or
-            # 추가 가능한 경로들
-            contact_data.get('CustomerNumber')
+            str(lambda_parameters.get('$.CustomerEndpoint.Address', ''))
         )
 
         print(f"=== Extracted Data ===")
@@ -91,14 +100,18 @@ def lambda_handler(event, context):
         print(f"Customer Input: '{customer_input}' (type: {type(customer_input)})")
         print(f"Customer Phone: {customer_phone}")
         
-        # Contact Flow Parameters 전체 출력
-        parameters = event.get('Details', {}).get('Parameters', {})
-        print(f"All Parameters: {json.dumps(parameters, ensure_ascii=False, indent=2)}")
+        # Lambda Parameters 상세 분석
+        print(f"=== Lambda Parameters Analysis ===")
+        print(f"Lambda Parameters: {json.dumps(lambda_parameters, ensure_ascii=False, indent=2)}")
+        print(f"Parameters keys: {list(lambda_parameters.keys())}")
         
         # 모든 가능한 입력 소스 디버깅
         print(f"=== Debug All Input Sources ===")
         for i, inp in enumerate(possible_inputs):
-            print(f"Source {i}: {inp} (type: {type(inp)})")
+            if inp:
+                print(f"✓ Source {i}: '{inp}' (type: {type(inp)})")
+            else:
+                print(f"✗ Source {i}: None/Empty")
 
         # 고객 입력값 검증
         if not customer_input:
