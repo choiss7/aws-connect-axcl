@@ -96,6 +96,28 @@ Contact Flow에서 사용할 수 있는 Lambda 응답 속성들:
 
 사번을 MD5 해시로 변환한 후, 앞 4자리를 16진수에서 10진수로 변환하여 10000으로 나눈 나머지를 사용합니다. 형식: `L0001` - `L9999`
 
+## Contact Flow 설정 가이드
+
+### 필수 설정 순서
+
+1. **StoreUserInput 블록**: 고객으로부터 사번 입력 받기
+2. **SetAttributes 블록**: 입력된 값을 속성으로 저장
+   ```
+   키: customerInput
+   값: $.StoredInput
+   ```
+3. **AWS Lambda 함수 호출 블록**: 파라미터 설정
+   ```
+   customerInput: $.Attributes.customerInput
+   customerPhone: $.CustomerEndpoint.Address
+   contactId: $.ContactId
+   ```
+
+### 중요 주의사항
+- **SetAttributes 블록이 Lambda 호출 전에 반드시 실행되어야 함**
+- **StoreUserInput 결과는 $.StoredInput으로 접근**
+- **Lambda에서는 $.Attributes.customerInput으로 전달받음**
+
 ## Contact Flow 연동 예시
 
 Lambda 함수 호출 후 응답 속성을 사용하는 방법:

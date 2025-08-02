@@ -63,29 +63,48 @@ def lambda_handler(event, context):
             lambda_parameters.get('userInput'),
             lambda_parameters.get('employeeId'),
             lambda_parameters.get('사번'),
-            # Contact attributes (SetAttributes에서 설정된 값들)
+            # Contact attributes (SetAttributes에서 설정된 값들) - 우선순위 높임
             attributes.get('customerInput'),
             attributes.get('customer_input'),
-            # 시스템 속성들
+            attributes.get('StoredInput'),
+            attributes.get('userInput'),
+            attributes.get('사번'),
+            # Contact data에서 직접
             contact_data.get('StoredInput'),
             contact_data.get('SystemAttributes', {}).get('StoredInput'),
             contact_data.get('Attributes', {}).get('StoredInput'),
-            # 추가 가능한 경로들
+            contact_data.get('Attributes', {}).get('customerInput'),
+            # Lambda Parameters에서 추가 경로들
             str(lambda_parameters.get('StoredInput', '')),
-            str(attributes.get('StoredInput', '')),
+            str(lambda_parameters.get('userInput', '')),
             # AWS Connect 시스템 변수들 (Standard Format)
             lambda_parameters.get('$.StoredInput'),
             lambda_parameters.get('$.External.customerInput'),
             lambda_parameters.get('$.Attributes.customerInput'),
+            lambda_parameters.get('$.Attributes.StoredInput'),
         ]
         
         # None이 아니고 빈 문자열이 아닌 첫 번째 값 선택
         customer_input = None
         for i, inp in enumerate(possible_inputs):
-            if inp and str(inp).strip():
+            if inp is not None and str(inp).strip() and str(inp).strip() != "":
                 customer_input = str(inp).strip()
                 print(f"✓ Found customer input from source {i}: '{inp}'")
                 break
+        
+        # 디버깅: Attributes에서 빈 값이라도 확인해보자
+        print(f"=== Attributes Debug ===")
+        for key, value in attributes.items():
+            print(f"Attribute '{key}': '{value}' (type: {type(value)}, empty: {not value or str(value).strip() == ''})")
+        
+        # Contact Flow 설정 가이드 출력 (customerInput이 빈 값일 때)
+        if not customer_input:
+            print(f"=== Contact Flow 설정 가이드 ===")
+            print(f"Lambda 파라미터 설정에서 다음을 확인하세요:")
+            print(f"1. customerInput 파라미터 값: $.StoredInput 또는 $.Attributes.StoredInput")
+            print(f"2. StoreUserInput 블록 이후에 SetAttributes 블록으로 값 저장")
+            print(f"3. SetAttributes에서 키: 'customerInput', 값: '$.StoredInput' 설정")
+            print(f"4. Lambda 호출 전에 SetAttributes 블록이 실행되는지 확인")
 
         # 고객 전화번호 추출
         customer_phone = (
