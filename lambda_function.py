@@ -115,7 +115,7 @@ def lambda_handler(event, context):
             print(f"")
             print(f"🔧 임시 해결책: 테스트용 기본값 사용")
             # 테스트용으로 기본값 설정 (실제 운영에서는 제거)
-            test_input = "TEST123"
+            test_input = "1234"  # 숫자형 테스트값으로 변경
             print(f"⚠️  테스트 모드: 기본값 '{test_input}' 사용")
             customer_input = test_input
         
