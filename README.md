@@ -103,8 +103,8 @@ Contact Flow에서 사용할 수 있는 Lambda 응답 속성들:
 1. **StoreUserInput 블록**: 고객으로부터 사번 입력 받기
 2. **SetAttributes 블록**: 입력된 값을 속성으로 저장
    ```
-   키: customerInput
-   값: $.StoredInput
+   키: inputValue
+   값: $.StoredCustomerInput
    ```
 3. **AWS Lambda 함수 호출 블록**: 파라미터 설정
    ```
