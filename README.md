@@ -143,3 +143,8 @@ Lambda 함수 호출 후 응답 속성을 사용하는 방법:
 2. **에러 분기**: `$.External.registrationStatus` != "SUCCESS"
 3. **메시지 출력**: `$.External.successMessage` 또는 `$.External.errorMessage`
 4. **추첨번호 안내**: `$.External.lotteryNumber`
+
+<img width="1051" height="711" alt="image" src="https://github.com/user-attachments/assets/4e0b61c1-b731-4a02-9efc-dff4af38078d" />
+
+<img width="1573" height="835" alt="image" src="https://github.com/user-attachments/assets/1aaf24ba-06f1-4297-9d00-67e6df19945f" />
+
