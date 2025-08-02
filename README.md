@@ -152,3 +152,5 @@ Lambda 함수 호출 후 응답 속성을 사용하는 방법:
 <img width="1839" height="829" alt="image" src="https://github.com/user-attachments/assets/982c5969-a559-4e08-9815-18086fb4be9f" />
 
 
+<img width="1408" height="694" alt="image" src="https://github.com/user-attachments/assets/afe6dbd5-bcc9-4133-a282-0a00a31ba43d" />
+
