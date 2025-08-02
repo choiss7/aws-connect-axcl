@@ -57,26 +57,34 @@ def lambda_handler(event, context):
 
         # 고객 입력값 추출 (이벤트 형식에 따른 처리)
         possible_inputs = [
-            # Lambda Parameters에서 직접 $.StoredInput (최우선순위)
+            # Lambda Parameters에서 직접 전달 (최우선순위)
+            lambda_parameters.get('inputValue'),   # 새로운 파라미터명
             lambda_parameters.get('StoredInput'),  # Contact Flow에서 직접 $.StoredInput 전달
             lambda_parameters.get('userInput'),    # Contact Flow에서 $.StoredInput을 userInput으로 전달
+            lambda_parameters.get('userInputValue'), # 추가 대안
             # 직접 파라미터에서 (Simple Format)
             lambda_parameters.get('customerInput'),
             lambda_parameters.get('customer_input'), 
             lambda_parameters.get('employeeId'),
             lambda_parameters.get('사번'),
+            lambda_parameters.get('empno'),        # 추가 대안
             # Contact attributes (SetAttributes에서 설정된 값들)
             attributes.get('customerInput'),
             attributes.get('customer_input'),
             attributes.get('StoredInput'),
             attributes.get('userInput'),
+            attributes.get('userInputValue'),
+            attributes.get('inputValue'),
             attributes.get('사번'),
+            attributes.get('empno'),
             # Contact data에서 직접
             contact_data.get('StoredInput'),
             contact_data.get('SystemAttributes', {}).get('StoredInput'),
             contact_data.get('Attributes', {}).get('StoredInput'),
             contact_data.get('Attributes', {}).get('customerInput'),
+            contact_data.get('Attributes', {}).get('inputValue'),
             # Lambda Parameters에서 문자열 변환
+            str(lambda_parameters.get('inputValue', '')),
             str(lambda_parameters.get('StoredInput', '')),
             str(lambda_parameters.get('userInput', '')),
             # AWS Connect 시스템 변수들 (Standard Format)
@@ -101,16 +109,20 @@ def lambda_handler(event, context):
         
         # Contact Flow 설정 가이드 출력 (customerInput이 빈 값일 때)
         if not customer_input:
-            print(f"=== Contact Flow 설정 가이드 ===")
-            print(f"Lambda 파라미터 설정에서 다음을 확인하세요:")
-            print(f"1. customerInput 파라미터 값: $.StoredInput 또는 $.Attributes.StoredInput")
-            print(f"2. StoreUserInput 블록 이후에 SetAttributes 블록으로 값 저장")
-            print(f"3. SetAttributes에서 키: 'customerInput', 값: '$.StoredInput' 설정")
-            print(f"4. Lambda 호출 전에 SetAttributes 블록이 실행되는지 확인")
+            print(f"=== ⚠️  긴급 해결 가이드 ===")
+            print(f"🔍 문제: Lambda Parameters = {{}} (완전히 비어있음)")
+            print(f"🔍 문제: Attributes StoredInput = '' (빈값)")
             print(f"")
-            print(f"⚠️  현재 문제: SetAttributes에서 customerInput = '' (빈값)")
-            print(f"💡 해결책: Lambda 파라미터에서 직접 $.StoredInput 사용하거나")
-            print(f"          StoreUserInput → SetAttributes 연결 확인")
+            print(f"💡 즉시 해결책 (SetAttributes 우회):")
+            print(f"Lambda 함수 블록에서 파라미터 직접 설정:")
+            print(f"   키: inputValue")
+            print(f"   값: $.StoredInput")
+            print(f"")
+            print(f"🔧 Contact Flow 점검사항:")
+            print(f"1. StoreUserInput 블록이 실제로 실행되는지 확인")
+            print(f"2. StoreUserInput 성공 출력이 다음 블록으로 연결되는지 확인")
+            print(f"3. SetAttributes 블록을 완전히 제거하고 Lambda에서 직접 처리")
+            print(f"4. $.StoredInput 값이 실제로 존재하는지 Contact Flow 테스트")
 
         # 고객 전화번호 추출
         customer_phone = (
