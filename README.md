@@ -187,6 +187,10 @@ pytest tests/ --cov=lambda-functions --cov-report=html
 - [AWS Connect 공식 문서](https://docs.aws.amazon.com/connect/)
 - [AWS Lambda 공식 문서](https://docs.aws.amazon.com/lambda/)
 
+image.png
+
+
+
 ## 🤝 기여 가이드
 
 1. 코드 스타일: Black, flake8 준수

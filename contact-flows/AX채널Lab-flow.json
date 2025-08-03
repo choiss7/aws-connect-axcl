@@ -1,0 +1,358 @@
+{
+  "Version": "2019-10-30",
+  "StartAction": "103b9bc6-d842-4fbd-984d-75cc7fbb0785",
+  "Metadata": {
+    "entryPointPosition": {
+      "x": 40,
+      "y": 40
+    },
+    "ActionMetadata": {
+      "4738052d-cbc2-46c5-bbc2-d3c98a473045": {
+        "position": {
+          "x": 1754.4,
+          "y": 116.8
+        },
+        "parameters": {
+          "ContactFlowId": {
+            "displayName": "상담원 연결"
+          }
+        },
+        "ContactFlow": {
+          "text": "상담원 연결"
+        }
+      },
+      "8d913f27-99c2-4af2-8c39-d601c3b91e7d": {
+        "position": {
+          "x": 450.4,
+          "y": 105.6
+        },
+        "parameters": {
+          "TextToSpeechVoice": {
+            "languageCode": "ko-KR"
+          }
+        },
+        "overrideConsoleVoice": true
+      },
+      "17305de7-0516-4329-a5fc-402733a9888c": {
+        "position": {
+          "x": 1381.6,
+          "y": 73.6
+        }
+      },
+      "054da57b-7fa2-4afd-bbd6-2ca0a88c9b87": {
+        "position": {
+          "x": 995.2,
+          "y": 65.6
+        },
+        "conditionMetadata": [
+          {
+            "id": "6d4d9ce3-bcce-4a88-bf37-2777557c1302",
+            "value": "1"
+          },
+          {
+            "id": "a6ee9169-7345-4be6-8bc5-5f8d4006f3c4",
+            "value": "0"
+          }
+        ]
+      },
+      "103b9bc6-d842-4fbd-984d-75cc7fbb0785": {
+        "position": {
+          "x": 188,
+          "y": 92
+        }
+      },
+      "b2530e7a-c95d-4bb7-9bc0-43f8d1e16465": {
+        "position": {
+          "x": 1058.4,
+          "y": 477.6
+        },
+        "conditionMetadata": [],
+        "countryCodePrefix": "+1"
+      },
+      "29712c1e-b32d-43c3-a1a5-1df5017af228": {
+        "position": {
+          "x": 1882.4,
+          "y": 549.6
+        },
+        "parameters": {
+          "SourceEndpoint": {
+            "Address": {
+              "useDynamic": true
+            }
+          },
+          "ContactFlowArn": {
+            "displayName": "AX채널Lab"
+          }
+        }
+      },
+      "b3f1c052-295c-41ed-a02f-5fe922d7a036": {
+        "position": {
+          "x": 852,
+          "y": 989.6
+        }
+      },
+      "634fd845-d210-4406-a206-182532e4e4d9": {
+        "position": {
+          "x": 1319.2,
+          "y": 475.2
+        },
+        "parameters": {
+          "LambdaFunctionARN": {
+            "displayName": "arn:aws:lambda:ap-northeast-2:564929925185:function:acxl_event"
+          }
+        },
+        "dynamicMetadata": {
+          "inputValue": false,
+          "customerPhone": false,
+          "contactId": false
+        }
+      },
+      "8fed6ea2-8c50-4f5c-87e7-8478445376c6": {
+        "position": {
+          "x": 1635.2,
+          "y": 754.4
+        }
+      }
+    },
+    "Annotations": [],
+    "name": "AX채널Lab",
+    "description": "",
+    "type": "contactFlow",
+    "status": "published",
+    "hash": {}
+  },
+  "Actions": [
+    {
+      "Parameters": {
+        "ContactFlowId": "arn:aws:connect:ap-northeast-2:564929925185:instance/0145fce9-86f3-48a2-b4a9-cb8826940b5b/contact-flow/6bd9b9a8-0eb2-4f09-a966-02b9a6811d1e"
+      },
+      "Identifier": "4738052d-cbc2-46c5-bbc2-d3c98a473045",
+      "Type": "TransferToFlow",
+      "Transitions": {
+        "NextAction": "b3f1c052-295c-41ed-a02f-5fe922d7a036",
+        "Errors": [
+          {
+            "NextAction": "b3f1c052-295c-41ed-a02f-5fe922d7a036",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Parameters": {
+        "TextToSpeechVoice": "Seoyeon",
+        "TextToSpeechEngine": "Standard",
+        "TextToSpeechStyle": "Standard"
+      },
+      "Identifier": "8d913f27-99c2-4af2-8c39-d601c3b91e7d",
+      "Type": "UpdateContactTextToSpeechVoice",
+      "Transitions": {
+        "NextAction": "054da57b-7fa2-4afd-bbd6-2ca0a88c9b87",
+        "Errors": [
+          {
+            "NextAction": "b3f1c052-295c-41ed-a02f-5fe922d7a036",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Parameters": {
+        "RecordingBehavior": {
+          "RecordedParticipants": [
+            "Agent",
+            "Customer"
+          ],
+          "ScreenRecordedParticipants": [
+            "Agent"
+          ],
+          "IVRRecordingBehavior": "Enabled"
+        },
+        "AnalyticsBehavior": {
+          "Enabled": "True",
+          "AnalyticsLanguage": "ko-KR",
+          "AnalyticsRedactionBehavior": "Disabled",
+          "AnalyticsRedactionResults": "None",
+          "ChannelConfiguration": {
+            "Chat": {
+              "AnalyticsModes": [
+                "ContactLens"
+              ]
+            },
+            "Voice": {
+              "AnalyticsModes": []
+            }
+          },
+          "SentimentConfiguration": {
+            "Enabled": "True"
+          }
+        }
+      },
+      "Identifier": "17305de7-0516-4329-a5fc-402733a9888c",
+      "Type": "UpdateContactRecordingBehavior",
+      "Transitions": {
+        "NextAction": "4738052d-cbc2-46c5-bbc2-d3c98a473045"
+      }
+    },
+    {
+      "Parameters": {
+        "StoreInput": "False",
+        "InputTimeLimitSeconds": "5",
+        "Text": "안녕하세요. 미디어로그 기업/솔루션 담당,\n에이아이 씨씨 데모입니다, \n\n세미나 이벤트 추첨은 1번, \n\n에이아이 씨씨 데모 안내는 2번 ,\n\n담당자 연결은 0번을  눌러주세요."
+      },
+      "Identifier": "054da57b-7fa2-4afd-bbd6-2ca0a88c9b87",
+      "Type": "GetParticipantInput",
+      "Transitions": {
+        "NextAction": "b2530e7a-c95d-4bb7-9bc0-43f8d1e16465",
+        "Conditions": [
+          {
+            "NextAction": "b2530e7a-c95d-4bb7-9bc0-43f8d1e16465",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "1"
+              ]
+            }
+          },
+          {
+            "NextAction": "17305de7-0516-4329-a5fc-402733a9888c",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "0"
+              ]
+            }
+          }
+        ],
+        "Errors": [
+          {
+            "NextAction": "b2530e7a-c95d-4bb7-9bc0-43f8d1e16465",
+            "ErrorType": "InputTimeLimitExceeded"
+          },
+          {
+            "NextAction": "b2530e7a-c95d-4bb7-9bc0-43f8d1e16465",
+            "ErrorType": "NoMatchingCondition"
+          },
+          {
+            "NextAction": "b3f1c052-295c-41ed-a02f-5fe922d7a036",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Parameters": {
+        "FlowLoggingBehavior": "Enabled"
+      },
+      "Identifier": "103b9bc6-d842-4fbd-984d-75cc7fbb0785",
+      "Type": "UpdateFlowLoggingBehavior",
+      "Transitions": {
+        "NextAction": "8d913f27-99c2-4af2-8c39-d601c3b91e7d"
+      }
+    },
+    {
+      "Parameters": {
+        "StoreInput": "True",
+        "InputTimeLimitSeconds": "5",
+        "Text": "이벤트 참여를 위한 사번을 입력하세요",
+        "DTMFConfiguration": {
+          "DisableCancelKey": "False",
+          "InterdigitTimeLimitSeconds": "5"
+        },
+        "InputValidation": {
+          "CustomValidation": {
+            "MaximumLength": "4"
+          }
+        }
+      },
+      "Identifier": "b2530e7a-c95d-4bb7-9bc0-43f8d1e16465",
+      "Type": "GetParticipantInput",
+      "Transitions": {
+        "NextAction": "634fd845-d210-4406-a206-182532e4e4d9",
+        "Errors": [
+          {
+            "NextAction": "b3f1c052-295c-41ed-a02f-5fe922d7a036",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Parameters": {
+        "SourceEndpoint": {
+          "Address": "$.SystemEndpoint.DisplayName",
+          "Type": "CONNECT_PHONENUMBER_ARN"
+        },
+        "DestinationEndpoint": {
+          "Address": "+821023692910",
+          "Type": "TELEPHONE_NUMBER"
+        },
+        "ContactFlowArn": "arn:aws:connect:ap-northeast-2:564929925185:instance/0145fce9-86f3-48a2-b4a9-cb8826940b5b/contact-flow/a9607398-8aff-4865-af68-71ba60bcbd7f",
+        "ContactSubtype": "connect:SMS",
+        "RelatedContact": "CURRENT",
+        "InitialSystemMessage": {
+          "Content": "성공적으로 등록되었습니다,"
+        }
+      },
+      "Identifier": "29712c1e-b32d-43c3-a1a5-1df5017af228",
+      "Type": "StartOutboundChatContact",
+      "Transitions": {
+        "NextAction": "b3f1c052-295c-41ed-a02f-5fe922d7a036",
+        "Errors": [
+          {
+            "NextAction": "b3f1c052-295c-41ed-a02f-5fe922d7a036",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Parameters": {},
+      "Identifier": "b3f1c052-295c-41ed-a02f-5fe922d7a036",
+      "Type": "DisconnectParticipant",
+      "Transitions": {}
+    },
+    {
+      "Parameters": {
+        "LambdaFunctionARN": "arn:aws:lambda:ap-northeast-2:564929925185:function:acxl_event",
+        "InvocationTimeLimitSeconds": "3",
+        "InvocationType": "SYNCHRONOUS",
+        "LambdaInvocationAttributes": {
+          "inputValue": "$.StoredCustomerInput",
+          "customerPhone": "$.CustomerEndpoint.Address",
+          "contactId": "$.ContactId"
+        },
+        "ResponseValidation": {
+          "ResponseType": "JSON"
+        }
+      },
+      "Identifier": "634fd845-d210-4406-a206-182532e4e4d9",
+      "Type": "InvokeLambdaFunction",
+      "Transitions": {
+        "NextAction": "8fed6ea2-8c50-4f5c-87e7-8478445376c6",
+        "Errors": [
+          {
+            "NextAction": "b3f1c052-295c-41ed-a02f-5fe922d7a036",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Parameters": {
+        "Text": "요청하신 내용은 , \n $.StoredCustomerInput ,\n사번으로 정상 이벤트 등록되었습니다\n\n행사가 끝난 후 추첨을 통하여 문자로 당첨 안내 정보를 보내 드립니다,  감사합니다"
+      },
+      "Identifier": "8fed6ea2-8c50-4f5c-87e7-8478445376c6",
+      "Type": "MessageParticipant",
+      "Transitions": {
+        "NextAction": "29712c1e-b32d-43c3-a1a5-1df5017af228",
+        "Errors": [
+          {
+            "NextAction": "b3f1c052-295c-41ed-a02f-5fe922d7a036",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    }
+  ]
+}
