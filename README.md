@@ -103,8 +103,8 @@ Contact Flow에서 사용할 수 있는 Lambda 응답 속성들:
 1. **StoreUserInput 블록**: 고객으로부터 사번 입력 받기
 2. **SetAttributes 블록**: 입력된 값을 속성으로 저장
    ```
-   키: customerInput
-   값: $.StoredInput
+   키: inputValue
+   값: $.StoredCustomerInput
    ```
 3. **AWS Lambda 함수 호출 블록**: 파라미터 설정
    ```
@@ -125,12 +125,12 @@ Contact Flow에서 사용할 수 있는 Lambda 응답 속성들:
 **즉시 해결 방법**: Lambda 파라미터에서 직접 설정
 ```
 키: StoredInput
-값: $.StoredInput
+값: $.StoredCustomerInput
 
 또는
 
 키: userInput  
-값: $.StoredInput
+값: $.StoredCustomerInput
 ```
 
 이렇게 하면 SetAttributes 없이도 직접 사용자 입력을 Lambda로 전달할 수 있습니다.
@@ -143,3 +143,14 @@ Lambda 함수 호출 후 응답 속성을 사용하는 방법:
 2. **에러 분기**: `$.External.registrationStatus` != "SUCCESS"
 3. **메시지 출력**: `$.External.successMessage` 또는 `$.External.errorMessage`
 4. **추첨번호 안내**: `$.External.lotteryNumber`
+
+<img width="1051" height="711" alt="image" src="https://github.com/user-attachments/assets/4e0b61c1-b731-4a02-9efc-dff4af38078d" />
+
+<img width="1573" height="835" alt="image" src="https://github.com/user-attachments/assets/1aaf24ba-06f1-4297-9d00-67e6df19945f" />
+
+
+<img width="1839" height="829" alt="image" src="https://github.com/user-attachments/assets/982c5969-a559-4e08-9815-18086fb4be9f" />
+
+
+<img width="1408" height="694" alt="image" src="https://github.com/user-attachments/assets/afe6dbd5-bcc9-4133-a282-0a00a31ba43d" />
+
