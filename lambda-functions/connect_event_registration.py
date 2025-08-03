@@ -49,9 +49,10 @@ def lambda_handler(event: Dict[str, Any], context) -> Dict[str, Any]:
             print("❌ Error: No customer input provided")
             return create_response("INPUT_ERROR", None, "사번을 입력해주세요.")
         
-        if not customer_input.isdigit() or len(customer_input) < 4 or len(customer_input) > 8:
-            print(f"❌ Validation failed: {customer_input}")
-            return create_response("INVALID_FORMAT", None, "올바른 사번을 입력해주세요. (4-8자리 숫자)")
+        # 사번 형식 검증: 3-8자리 숫자 (0으로 시작 가능)
+        if not customer_input.isdigit() or len(customer_input) < 3 or len(customer_input) > 8:
+            print(f"❌ Validation failed: {customer_input} (길이: {len(customer_input)})")
+            return create_response("INVALID_FORMAT", None, "올바른 사번을 입력해주세요. (3-8자리 숫자, 0으로 시작 가능)")
         
         # 중복 등록 확인
         if is_duplicate_registration(customer_input):
