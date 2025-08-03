@@ -7,8 +7,7 @@ pytest를 사용한 단위 테스트 및 통합 테스트
 import pytest
 import json
 import boto3
-from moto import mock_s3
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 import sys
 import os
 
@@ -27,12 +26,18 @@ from connect_event_registration import (
 class TestLambdaHandler:
     """Lambda 핸들러 테스트"""
     
-    @mock_s3
-    def test_successful_registration(self):
+    @patch('boto3.client')
+    def test_successful_registration(self, mock_boto3_client):
         """정상적인 등록 프로세스 테스트"""
         # S3 모킹 설정
-        s3 = boto3.client('s3', region_name='us-east-1')
-        s3.create_bucket(Bucket='axcl')
+        mock_s3 = MagicMock()
+        mock_boto3_client.return_value = mock_s3
+        
+        # NoSuchKey 예외를 시뮬레이션 (새로운 등록)
+        from botocore.exceptions import ClientError
+        mock_s3.get_object.side_effect = ClientError(
+            {'Error': {'Code': 'NoSuchKey'}}, 'GetObject'
+        )
         
         # 테스트 이벤트
         event = {
@@ -57,17 +62,22 @@ class TestLambdaHandler:
         assert result["lotteryNumber"].startswith("L")
         assert "등록이 완료되었습니다" in result["successMessage"]
         assert result["errorMessage"] == ""
+        
+        # S3 put_object가 호출되었는지 확인
+        mock_s3.put_object.assert_called_once()
     
-    @mock_s3
-    def test_duplicate_registration(self):
+    @patch('boto3.client')
+    def test_duplicate_registration(self, mock_boto3_client):
         """중복 등록 방지 테스트"""
         # S3 모킹 설정
-        s3 = boto3.client('s3', region_name='us-east-1')
-        s3.create_bucket(Bucket='axcl')
+        mock_s3 = MagicMock()
+        mock_boto3_client.return_value = mock_s3
         
-        # 기존 데이터 설정
+        # 기존 데이터 시뮬레이션
         existing_data = "2025-08-03T10:00:00+00:00,+821012345678,contact-123,1234\n"
-        s3.put_object(Bucket='axcl', Key='axcl_event.txt', Body=existing_data.encode('utf-8'))
+        mock_response = MagicMock()
+        mock_response['Body'].read.return_value = existing_data.encode('utf-8')
+        mock_s3.get_object.return_value = mock_response
         
         # 중복 등록 시도
         event = {
@@ -202,35 +212,51 @@ class TestResponseCreation:
         assert result["errorMessage"] == "오류 발생"
 
 
-@mock_s3
 class TestDuplicateCheck:
     """중복 확인 테스트"""
     
-    def setup_method(self):
-        """테스트 설정"""
-        self.s3 = boto3.client('s3', region_name='us-east-1')
-        self.s3.create_bucket(Bucket='axcl')
-    
-    def test_no_duplicate_empty_file(self):
+    @patch('boto3.client')
+    def test_no_duplicate_empty_file(self, mock_boto3_client):
         """빈 파일에서 중복 확인 테스트"""
-        result = is_duplicate_registration("1234")
-        assert result is False
-    
-    def test_no_duplicate_with_data(self):
-        """데이터가 있지만 중복되지 않는 경우 테스트"""
-        existing_data = "2025-08-03T10:00:00+00:00,+821012345678,contact-123,5678\n"
-        self.s3.put_object(Bucket='axcl', Key='axcl_event.txt', Body=existing_data.encode('utf-8'))
+        mock_s3 = MagicMock()
+        mock_boto3_client.return_value = mock_s3
+        
+        # NoSuchKey 예외 시뮬레이션
+        from botocore.exceptions import ClientError
+        mock_s3.get_object.side_effect = ClientError(
+            {'Error': {'Code': 'NoSuchKey'}}, 'GetObject'
+        )
         
         result = is_duplicate_registration("1234")
         assert result is False
     
-    def test_duplicate_found(self):
+    @patch('boto3.client')
+    def test_no_duplicate_with_data(self, mock_boto3_client):
+        """데이터가 있지만 중복되지 않는 경우 테스트"""
+        mock_s3 = MagicMock()
+        mock_boto3_client.return_value = mock_s3
+        
+        existing_data = "2025-08-03T10:00:00+00:00,+821012345678,contact-123,5678\n"
+        mock_response = MagicMock()
+        mock_response['Body'].read.return_value = existing_data.encode('utf-8')
+        mock_s3.get_object.return_value = mock_response
+        
+        result = is_duplicate_registration("1234")
+        assert result is False
+    
+    @patch('boto3.client')
+    def test_duplicate_found(self, mock_boto3_client):
         """중복 발견 테스트"""
+        mock_s3 = MagicMock()
+        mock_boto3_client.return_value = mock_s3
+        
         existing_data = (
             "2025-08-03T10:00:00+00:00,+821012345678,contact-123,1234\n"
             "2025-08-03T10:05:00+00:00,+821087654321,contact-456,5678\n"
         )
-        self.s3.put_object(Bucket='axcl', Key='axcl_event.txt', Body=existing_data.encode('utf-8'))
+        mock_response = MagicMock()
+        mock_response['Body'].read.return_value = existing_data.encode('utf-8')
+        mock_s3.get_object.return_value = mock_response
         
         result = is_duplicate_registration("1234")
         assert result is True
