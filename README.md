@@ -2,155 +2,204 @@
 
 AWS Connect와 Lambda를 연동한 전화 기반 이벤트 등록 시스템입니다.
 
-## 시스템 개요
+## 📁 프로젝트 구조
+
+```
+aws-connect-axcl/
+├── contact-flows/              # Contact Flow 설정 이미지 및 JSON
+├── lambda-functions/           # Lambda 함수 코드
+│   └── connect_event_registration.py
+├── scripts/                    # 배포 및 유틸리티 스크립트
+│   ├── deploy.ps1             # PowerShell 배포 스크립트
+│   └── requirements.txt       # Python 의존성
+├── tests/                      # 테스트 코드
+│   └── test_lambda_function.py
+├── docs/                       # 문서화
+│   └── contact-flow-setup.md  # Contact Flow 설정 가이드
+├── .cursor/rules/              # Cursor AI 개발 룰
+│   └── cursorruls.txt
+└── README.md                   # 프로젝트 문서
+```
+
+## 📞 시스템 개요
 
 이 시스템은 AWS Connect Contact Flow를 통해 고객으로부터 사번을 입력받아 이벤트에 등록하고, S3에 데이터를 저장하는 시스템입니다.
 
-## 아키텍처
+## 🏗️ 아키텍처
 
 ```
-고객 전화 → AWS Connect → Contact Flow → Lambda Function → S3 Storage
+고객 전화 
+    ↓
+AWS Connect Contact Flow
+    ↓ (사번 입력)
+Lambda Function (이벤트 등록)
+    ↓ (데이터 저장)
+S3 (axcl/axcl_event.txt)
+    ↓ (응답)
+고객에게 추첨번호 안내
 ```
 
-## 주요 구성 요소
+## 🔧 주요 구성요소
 
-### 1. AWS Connect Contact Flow
-- 고객으로부터 사번 입력 수집
-- 입력값 검증 및 Lambda 함수 호출
-- 응답 메시지 전달
+### 1. AWS Connect
+- **Contact Flow**: 고객 입력 처리 및 Lambda 호출
+- **Phone Number**: 이벤트 등록용 전화번호
 
-### 2. Lambda Function (`lambda_function.py`)
-- Contact Flow에서 전달받은 데이터 처리
-- 고객 정보 추출 및 검증
-- S3에 이벤트 데이터 저장
-- 추첨 번호 생성 및 응답
+### 2. Lambda Function (`connect_event_registration.py`)
+- **입력 검증**: 4-8자리 숫자 사번 검증
+- **중복 확인**: 동일 사번 재등록 방지
+- **S3 저장**: 등록 데이터 저장
+- **추첨번호 생성**: MD5 해시 기반 고유번호 생성
 
 ### 3. S3 Storage
-- 버킷명: `axcl`
-- 파일명: `axcl_event.txt`
-- 이벤트 등록 데이터를 JSON 형태로 저장
+- **Bucket**: `axcl`
+- **File**: `axcl_event.txt`
+- **Format**: `timestamp,phone,contact_id,employee_id`
 
-## 데이터 구조
+## 📊 데이터 구조
 
-저장되는 데이터 형식:
-```json
-{
-    "contactId": "contact-uuid",
-    "timestamp": "2024-01-01T00:00:00.000000",
-    "customerPhone": "+82-10-1234-5678",
-    "customerInput": "사번",
-    "eventType": "lottery_registration"
-}
+### S3 저장 형식
+```
+2025-08-03T14:30:15.123Z,+821012345678,contact-123,1234
+2025-08-03T14:35:22.456Z,+821087654321,contact-456,5678
 ```
 
-## Lambda 함수 주요 기능
+### Lambda 응답 속성
+- `registrationStatus`: SUCCESS | INPUT_ERROR | INVALID_FORMAT | DUPLICATE | ERROR
+- `lotteryNumber`: L#### (성공시에만)
+- `successMessage`: 성공 메시지 (성공시에만)
+- `errorMessage`: 오류 메시지 (실패시에만)
 
-1. **데이터 추출**: Contact Flow에서 전달된 고객 정보 추출
-2. **입력 검증**: 사번 입력값 유효성 검사 (4-8자리 숫자)
-3. **중복 확인**: 이미 등록된 사번 중복 등록 방지
-4. **S3 저장**: 이벤트 데이터를 S3에 추가 저장
-5. **추첨 번호 생성**: 사번 기반 해시를 이용한 고유 추첨 번호 생성
-6. **표준화된 응답**: Contact Flow에서 사용하기 쉬운 표준화된 응답 형식
-7. **에러 처리**: 시스템 오류 및 S3 저장 실패에 대한 적절한 처리
+## 🚀 빠른 시작
 
-## 설정 요구사항
-
-### AWS Lambda
-- Runtime: Python 3.9+
-- IAM Role: S3 읽기/쓰기 권한 필요
-- Environment Variables: 필요시 BUCKET_NAME 설정
-
-### AWS Connect
-- Contact Flow에서 Lambda 함수 연동 설정
-- 고객 입력을 Lambda로 전달하는 Invoke AWS Lambda 블록 구성
-
-### S3 Bucket
-- 버킷명: `axcl`
-- 적절한 접근 권한 설정
-
-## 사용법
-
-1. AWS Connect에서 Contact Flow 설정
-2. Lambda 함수 배포 및 Connect와 연동
-3. S3 버킷 생성 및 권한 설정
-4. 시스템 테스트
-
-## Lambda 응답 속성
-
-Contact Flow에서 사용할 수 있는 Lambda 응답 속성들:
-
-### 성공 시
-- `registrationStatus`: "SUCCESS"
-- `contactId`: Contact ID
-- `customerPhone`: 고객 전화번호
-- `customerInput`: 입력된 사번
-- `lotteryNumber`: 생성된 추첨번호 (L0001-L9999)
-- `successMessage`: 성공 메시지
-
-### 에러 시
-- `registrationStatus`: "INPUT_ERROR" | "INVALID_FORMAT" | "DUPLICATE" | "ERROR"
-- `errorMessage`: 에러 메시지
-- `success`: false
-
-## 추첨 번호 생성 로직
-
-사번을 MD5 해시로 변환한 후, 앞 4자리를 16진수에서 10진수로 변환하여 10000으로 나눈 나머지를 사용합니다. 형식: `L0001` - `L9999`
-
-## Contact Flow 설정 가이드
-
-### 필수 설정 순서
-
-1. **StoreUserInput 블록**: 고객으로부터 사번 입력 받기
-2. **SetAttributes 블록**: 입력된 값을 속성으로 저장
-   ```
-   키: inputValue
-   값: $.StoredCustomerInput
-   ```
-3. **AWS Lambda 함수 호출 블록**: 파라미터 설정
-   ```
-   customerInput: $.Attributes.customerInput
-   customerPhone: $.CustomerEndpoint.Address
-   contactId: $.ContactId
-   ```
-
-### 중요 주의사항
-- **SetAttributes 블록이 Lambda 호출 전에 반드시 실행되어야 함**
-- **StoreUserInput 결과는 $.StoredInput으로 접근**
-- **Lambda에서는 $.Attributes.customerInput으로 전달받음**
-
-### 🚨 SetAttributes가 작동하지 않는 경우
-
-만약 SetAttributes에서 `customerInput = ""` (빈값)이 설정되는 경우:
-
-**즉시 해결 방법**: Lambda 파라미터에서 직접 설정
-```
-키: StoredInput
-값: $.StoredCustomerInput
-
-또는
-
-키: userInput  
-값: $.StoredCustomerInput
+### 1. 의존성 설치
+```powershell
+# Python 의존성 설치
+pip install -r scripts/requirements.txt
 ```
 
-이렇게 하면 SetAttributes 없이도 직접 사용자 입력을 Lambda로 전달할 수 있습니다.
+### 2. 테스트 실행
+```powershell
+# 단위 테스트
+pytest tests/ -v
 
-## Contact Flow 연동 예시
+# 커버리지 포함
+pytest tests/ --cov=lambda-functions --cov-report=html
+```
 
-Lambda 함수 호출 후 응답 속성을 사용하는 방법:
+### 3. Lambda 함수 배포
+```powershell
+# 개발 환경 배포
+.\scripts\deploy.ps1 -Environment dev
 
-1. **성공 분기**: `$.External.registrationStatus` == "SUCCESS"
-2. **에러 분기**: `$.External.registrationStatus` != "SUCCESS"
-3. **메시지 출력**: `$.External.successMessage` 또는 `$.External.errorMessage`
-4. **추첨번호 안내**: `$.External.lotteryNumber`
+# 운영 환경 배포
+.\scripts\deploy.ps1 -Environment prod
+```
 
-<img width="1051" height="711" alt="image" src="https://github.com/user-attachments/assets/4e0b61c1-b731-4a02-9efc-dff4af38078d" />
+## 📋 Contact Flow 설정
 
-<img width="1573" height="835" alt="image" src="https://github.com/user-attachments/assets/1aaf24ba-06f1-4297-9d00-67e6df19945f" />
+자세한 Contact Flow 설정 방법은 [Contact Flow 설정 가이드](docs/contact-flow-setup.md)를 참조하세요.
 
+### 핵심 설정 요약
 
-<img width="1839" height="829" alt="image" src="https://github.com/user-attachments/assets/982c5969-a559-4e08-9815-18086fb4be9f" />
+1. **StoreUserInput**
+   - MaxDigits: 8
+   - Timeout: 5000ms
+   - End digit: #
 
+2. **Lambda Parameters**
+   ```json
+   {
+     "inputValue": "$.StoredInput",
+     "customerPhone": "$.CustomerEndpoint.Address",
+     "contactId": "$.ContactId"
+   }
+   ```
 
-<img width="1408" height="694" alt="image" src="https://github.com/user-attachments/assets/afe6dbd5-bcc9-4133-a282-0a00a31ba43d" />
+3. **응답 분기**
+   - 성공: `$.External.registrationStatus` == "SUCCESS"
+   - 실패: `$.External.registrationStatus` != "SUCCESS"
 
+## 🐛 문제해결
+
+### 일반적인 문제들
+
+#### 1. StoreUserInput 값이 전달되지 않음
+**해결책**: Lambda 파라미터에서 `inputValue: $.StoredInput` 직접 설정
+
+#### 2. Lambda Parameters가 비어있음
+**해결책**: SetAttributes 블록 제거하고 Lambda 직접 연동
+
+#### 3. DTMF 입력이 감지되지 않음
+**해결책**: 
+- 전화기 DTMF 설정 확인
+- MaxDigits 충분히 설정 (8자리)
+- Timeout 5초 이상 설정
+
+### 로그 확인 방법
+
+1. **Contact Flow 로그**: CloudWatch Logs
+2. **Lambda 로그**: CloudWatch Logs
+3. **등록 데이터**: S3 bucket `axcl/axcl_event.txt`
+
+## 🧪 테스트 시나리오
+
+### 성공 케이스
+- 4자리 사번 입력: "1234" → 추첨번호 생성
+- 8자리 사번 입력: "12345678" → 추첨번호 생성
+
+### 실패 케이스
+- 문자 포함: "abc123" → "올바른 사번을 입력해주세요"
+- 중복 등록: 기존 사번 → "이미 등록된 사번입니다"
+- 입력 없음: "" → "사번을 입력해주세요"
+
+## 📈 모니터링
+
+### CloudWatch 메트릭
+- Lambda Duration
+- Lambda Errors
+- Contact Flow 성공률
+
+### 알람 설정
+- Lambda 에러율 > 5%
+- 응답 시간 > 5초
+- Contact Flow 실패율 > 10%
+
+## 🔒 보안 고려사항
+
+1. **IAM 권한**: Lambda 함수에 S3 최소 권한만 부여
+2. **데이터 암호화**: S3 저장시 암호화 활성화
+3. **로그 마스킹**: 민감정보 로그 출력 방지
+4. **VPC**: 필요시 Lambda를 VPC에 배치
+
+## 🛠️ 개발 환경
+
+- **Python**: 3.9+
+- **AWS SDK**: boto3
+- **테스트**: pytest, moto
+- **CI/CD**: GitHub Actions (예정)
+- **모니터링**: CloudWatch
+
+## 📚 관련 문서
+
+- [Contact Flow 설정 가이드](docs/contact-flow-setup.md)
+- [Cursor AI 개발 룰](.cursor/rules/cursorruls.txt)
+- [AWS Connect 공식 문서](https://docs.aws.amazon.com/connect/)
+- [AWS Lambda 공식 문서](https://docs.aws.amazon.com/lambda/)
+
+## 🤝 기여 가이드
+
+1. 코드 스타일: Black, flake8 준수
+2. 테스트: 모든 변경사항에 대한 테스트 필수
+3. 문서화: README 및 코드 주석 업데이트
+4. 커밋: Conventional Commits 형식 사용
+
+## 📄 라이선스
+
+이 프로젝트는 AXCL 내부 사용을 위한 것입니다.
+
+---
+
+**개발팀**: AXCL IT Team  
+**마지막 업데이트**: 2025-08-03  
+**버전**: 2.0.0

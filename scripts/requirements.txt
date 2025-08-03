@@ -1,0 +1,27 @@
+# AWS Connect AXCL 프로젝트 의존성
+# Lambda 런타임에 포함되지 않은 추가 패키지들
+
+# 테스트 도구
+pytest==7.4.0
+pytest-cov==4.1.0
+pytest-mock==3.11.1
+
+# AWS 모킹 도구
+moto[s3]==4.2.0
+boto3==1.28.17
+botocore==1.31.17
+
+# 코드 품질 도구
+flake8==6.0.0
+black==23.7.0
+mypy==1.5.1
+
+# 타입 힌트
+types-boto3==1.0.2
+
+# 개발 도구
+ipython==8.14.0
+jupyter==1.0.0
+
+# 로깅 및 모니터링
+structlog==23.1.0
