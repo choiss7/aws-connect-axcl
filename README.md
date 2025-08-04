@@ -187,7 +187,7 @@ pytest tests/ --cov=lambda-functions --cov-report=html
 - [AWS Connect 공식 문서](https://docs.aws.amazon.com/connect/)
 - [AWS Lambda 공식 문서](https://docs.aws.amazon.com/lambda/)
 
-image.png
+<img width="1460" height="690" alt="image" src="https://github.com/user-attachments/assets/cc5af9e1-f3ac-4676-b852-6bbf00d1128f" />
 
 
 
@@ -204,6 +204,6 @@ image.png
 
 ---
 
-**개발팀**: AXCL IT Team  
+**개발팀**: AXCL 팀
 **마지막 업데이트**: 2025-08-03  
 **버전**: 2.0.0
