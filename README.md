@@ -183,6 +183,7 @@ pytest tests/ --cov=lambda-functions --cov-report=html
 ## 📚 관련 문서
 
 - [Contact Flow 설정 가이드](docs/contact-flow-setup.md)
+- [CloudWatch 로그 확인 가이드](docs/cloudwatch-logs-guide.md)
 - [Cursor AI 개발 룰](.cursor/rules/cursorruls.txt)
 - [AWS Connect 공식 문서](https://docs.aws.amazon.com/connect/)
 - [AWS Lambda 공식 문서](https://docs.aws.amazon.com/lambda/)
